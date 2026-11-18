@@ -1,0 +1,24 @@
+Blockly.Blocks['1752654145868'] = {
+  init: function() {
+    this.jsonInit({
+      "type": "1752654145868",
+      "message0": "BoxRightTurn_2",
+      "previousStatement": "motion_block",
+      "nextStatement": "motion_block",
+      "colour": "#EDC611",
+      "toolip": "",
+      "helpUrl": ""
+    });
+  }
+};
+
+Blockly.Lua['1752654145868'] = function(block) {
+  let code = "MOTOrigid16(30,30,30,65,65,65,65,65,30,30,30,65,65,65,65,65)\nMOTOsetspeed(50)\nMOTOmove19(65,10,185,102,138,69,160,101,140,190,15,106,174,175,108,102,0,0,100)\nMOTOwait()\nMOTOsetspeed(20)\nMOTOmove19(65,10,185,100,91,55,129,100,140,190,15,100,109,145,71,100,0,0,100)\nMOTOwait()\n";
+  return code;
+}
+
+Blockly.Python['1752654145868'] = function(block) {
+  let code = "base_action.action('BoxRightTurn_2')\n";
+  return code;
+}
+
