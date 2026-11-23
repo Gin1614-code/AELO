@@ -44,28 +44,28 @@ def Box_Up(n):
 def FirstBoxGo1(n):
     for _ in range(n):
         print("[第一轮动作] 前进1步")
-        base_action.action("front1_new1")
+        base_action.action("front1_quick1")
         time.sleep(SLEEP_FORWARD_S)
 
 
 def FirstBoxGo2(n):
     for _ in range(n):
         print("[第一轮动作] 前进2步")
-        base_action.action("front2_new1")
+        base_action.action("front2_quick2")
         time.sleep(SLEEP_FORWARD_S)
 
 
 def FirstBoxGo3(n):
     for _ in range(n):
         print("[第一轮动作] 前进3步")
-        base_action.action("front4_new1")
+        base_action.action("front3ad")
         time.sleep(SLEEP_FORWARD_S)
 
 
 def FirstBoxGo4(n):
     for _ in range(n):
         print("[第一轮动作] 前进4步")
-        base_action.action("front4_new1")
+        base_action.action("front4_quick2")
         time.sleep(SLEEP_FORWARD_S)
 
 
@@ -93,7 +93,7 @@ def FirstBoxLMove1(n):
 def FirstBoxLMove2(n):
     for _ in range(n):
         print("[第一轮动作] 左移大步")
-        base_action.action("bigleft_new1")
+        base_action.action("bigleft_1")
         time.sleep(SLEEP_SIDE_TURN_S)
 
 
@@ -1193,7 +1193,8 @@ def leave_pickup_area():
     dbg('leave_pickup_area', 'route=%s', selected_route)
     # ★ 2026-10-16：删掉"侧移后强制前进一次"（两条路线都删）
     if selected_route == ROUTE_SEARCH:
-        BoxLMove2(2)
+        BoxLMove2(1)
+        BoxGo2(1)
     else:
         # ★ 2026-10-22：选项 3/4（直达抱箱）左侧大步 5 → 4
         time.sleep(SLEEP_DIRECT_ROUTE_BEFORE_SIDE_S)
@@ -1625,6 +1626,7 @@ def reset_round_state(sleep_func=time.sleep):
     global id3_blind_count, id4_blind_count, id5_blind_count
     global round_start_time
     global id1_heading_reference
+    
 
     round += 1
     ID = 0
