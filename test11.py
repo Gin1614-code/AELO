@@ -1202,7 +1202,7 @@ def leave_pickup_area():
     # ★ 2026-10-16：删掉"侧移后强制前进一次"（两条路线都删）
     if selected_route == ROUTE_SEARCH:
         BoxLMove2(2)
-        BoxGo4(2)
+        BoxGo4(1)
     else:
         # ★ 2026-10-22：选项 3/4（直达抱箱）左侧大步 5 → 4
         time.sleep(SLEEP_DIRECT_ROUTE_BEFORE_SIDE_S)
