@@ -1,0 +1,33 @@
+# test_measure_xy.py
+import time, cv2, numpy as np, rospy
+from image_Tag_converter import ImgConverter
+import sys
+sys.path.append("/home/lemon/catkin_ws/src/aelos_smart_ros")
+
+color_range = {
+    "green": [(48, 102, 72), (99, 255, 155)],
+}
+
+rospy.init_node("measure_xy")
+reader = ImgConverter()
+
+while True:
+    ret, img = reader.chest_image()
+    if img is None:
+        time.sleep(0.2)
+        continue
+
+    bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    hsv = cv2.GaussianBlur(cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV), (3,3), 0)
+    mask = cv2.inRange(hsv, color_range["green"][0], color_range["green"][1])
+    cv2.erode(mask, None, iterations=2)
+    opened = cv2.dilate(mask, np.ones((4,4), np.uint8), iterations=2)
+    cnts, _ = cv2.findContours(opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    if cnts:
+        big = max(cnts, key=cv2.contourArea)
+        (x, y), r = cv2.minEnclosingCircle(big)
+        print(f"X={x:.1f}  Y={y:.1f}")
+    else:
+        print("未识别到")
+    time.sleep(0.3)
