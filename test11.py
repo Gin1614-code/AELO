@@ -625,6 +625,7 @@ TAG_LOST_COMPLETE_SECONDS = 0.6
 TAG2_X_OFFSET = 0.08
 TAG2_X_THRESHOLD = 0.01
 TAG2_FORWARD_LIMIT = 0.155         # ★ 2026-10-22：0.145 → 0.155（前后对齐放宽 0.01m）
+TAG2_GO2_EXTRA_M = 0.15    # 距离差超过此值 → 走大步
 TAG2_LOST_FORWARD_STEP_M = 0.025    # 丢码估算：每前进一步从最后距离扣 0.025m；对正界限仍是上面的 0.155m
 TAG4_X_OFFSET = 0.11
 TAG4_X_THRESHOLD = 0.05
@@ -1193,7 +1194,7 @@ def leave_pickup_area():
     dbg('leave_pickup_area', 'route=%s', selected_route)
     # ★ 2026-10-16：删掉"侧移后强制前进一次"（两条路线都删）
     if selected_route == ROUTE_SEARCH:
-        BoxLMove2(1)
+        BoxLMove2(2)
         BoxGo2(1)
     else:
         # ★ 2026-10-22：选项 3/4（直达抱箱）左侧大步 5 → 4
@@ -1808,11 +1809,15 @@ def turn_to_tag(
                 BoxRMove2(1)
             else:
                 BoxRMove1(1)
-        elif dis_x > TAG2_FORWARD_LIMIT:
-            BoxGo1(1)
-            # 这一步发出后若立刻丢码，估算要扣掉这 0.025m。
+        # 远距离用大步，近距离用一小步，避免 9 步挪不完
+            if dis_x > TAG2_FORWARD_LIMIT + 0.15:     # 差超过 0.15m → 走大步
+                BoxGo2(1)
+                step_add = 2
+            else:
+                BoxGo1(1)
+                step_add = 1
             if tag2_lost_baseline_dis_x is not None:
-                tag2_lost_forward_steps += 1
+                tag2_lost_forward_steps += step_add
         else:
             time.sleep(SLEEP_ALIGN_PAUSE_S)
             is_turn_done = True
