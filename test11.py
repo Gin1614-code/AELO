@@ -447,6 +447,7 @@ SLEEP_GOTO_BOX_AFTER_FORWARD_S = 0.5
 SLEEP_DIRECT_ROUTE_BEFORE_SIDE_S = 0.7
 SLEEP_FIND_BOX_WAIT_S = 0.3
 SLEEP_MAG_POLL_S = 0.12            # mag_settle 采样间隔
+MAG_ASSIST_MIN_WAIT_S = 0.6    # 新增：先固定等这么久再判稳定
 SLEEP_CAMERA_INIT_S = 5.0
 SLEEP_ROUND_RESET_S = 3.0
 SLEEP_POST_INIT_S = 0.5
@@ -769,13 +770,19 @@ def mag_settle(rel_before=None):
     t0 = time.time()
     prev = None
     n = 0
+
+    # ★ 新增：先无条件等够最小时间，避免动作起步阶段被误判为"已稳定"
+    while (time.time() - t0) < MAG_ASSIST_MIN_WAIT_S and not rospy.is_shutdown():
+        time.sleep(SLEEP_MAG_POLL_S)
+
+    # 之后才开始判稳定（采样间隔仍是 SLEEP_MAG_POLL_S）
     while (time.time() - t0) < MAG_ASSIST_TIMEOUT and not rospy.is_shutdown():
         r = current_relative_heading()
         if r is None:
             break
         n += 1
         if prev is not None and abs(angle_diff(r, prev)) < MAG_ASSIST_TOL:
-            break                       # 连续两次几乎不动 -> 判定已稳定
+            break
         prev = r
         time.sleep(SLEEP_MAG_POLL_S)
 
