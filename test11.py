@@ -1565,8 +1565,8 @@ def _run_complete_actions(tag_id):
                 f"[ID=1完成] 保存参考地磁航向="
                 f"{id1_heading_reference:+.1f}°"
             )
-        print("[号码完成] ID=1 对正完成，前进4步后切到 ID=2")
-        BoxGo4(1)
+        print("[号码完成] ID=1 对正完成，前进4步*2后切到 ID=2")
+        BoxGo4(2)
         ID = 2
         return False
 
@@ -1816,7 +1816,7 @@ def turn_to_tag(
                 BoxRMove2(1)
             else:
                 BoxRMove1(1)
-        # 远距离用大步，近距离用一小步，避免 9 步挪不完
+        # 远距离用大步，近距离用一小步
             if dis_x > TAG2_FORWARD_LIMIT + 0.15:     # 差超过 0.15m → 走大步
                 BoxGo2(1)
                 step_add = 2
