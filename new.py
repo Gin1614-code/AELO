@@ -360,7 +360,7 @@ MAG_FALLBACK_CAMERA = False  # 读不到航向时是否退回摄像头角度（U
 MAG_ASSIST = True
 MAG_ASSIST_TIMEOUT = 2.5     # 单次动作后等地磁稳定的最长等待（秒）
 MAG_ASSIST_TOL = 1.2         # 稳定判据：连续两次采样 rel 变化 < 该值（度）
-MAG_ASSIST_VERBOSE = True    # 打印每次等待结果
+MAG_ASSIST_VERBOSE = False    # 打印每次等待结果
 
 # ============ 【地磁纠角】转向丢码 → 用原地转角增量更新摄像头剩余 θ ============
 # 场景：转向对正时把 tag 转出视野。
@@ -668,7 +668,7 @@ def read_mag_heading():
     """读取地磁航向角（0~359 度）。失败返回 None。"""
     try:
         h = float(sensor_port.get_magnet())
-        dbg('read_mag_heading', 'raw=%.3f', h)
+        # dbg('read_mag_heading', 'raw=%.3f', h)
         return h
     except Exception as e:
         print(f"[地磁] 读取失败: {e}")
@@ -1158,7 +1158,7 @@ def leave_pickup_area():
 
 def search_for_id():
     # ★ 盲搜前地磁介入：航向偏超 ±BLIND_SEARCH_ANGLE_TOL 就先转向，本周期不盲搜
-    dbg('search_for_id', 'enter ID=%s forced_lock=%s', ID, forced_action_lock)
+    # dbg('search_for_id', 'enter ID=%s forced_lock=%s', ID, forced_action_lock)
     if blind_heading_guard():
         dbg('search_for_id', 'blind_heading_guard diverted')
         return
@@ -1540,7 +1540,7 @@ def complete_current_tag(tag_id):
 def _run_complete_actions(tag_id):
     global ID, id4_blind_count
 
-    dbg('_run_complete_actions', 'tag_id=%s route=%s group=%s', tag_id, selected_route, selected_action_group)
+    # dbg('_run_complete_actions', 'tag_id=%s route=%s group=%s', tag_id, selected_route, selected_action_group)
     clear_tag_tracking()
 
     if tag_id == 1:
@@ -1646,13 +1646,13 @@ def reset_round_state(sleep_func=time.sleep):
 def turn_to_tag(
     dis_x,
     dis_y,
-    theta,
+    theta,   # 摄像头原始测量值
     x_offset=0,
-    y_offset=0,
-    theta_offset=5,
-    x_threshold=0.03,
-    y_threshold=0.1,
-    theta_threshold=5,
+    y_offset=0,  
+    theta_offset=5,   # 期望站在哪（目标点）
+    x_threshold=0.03,  
+    y_threshold=0.1,  # 容差
+    theta_threshold=5,  # 分档线 决定"转 30°"还是"转 10°"
 ):
     global tag4_lost_forward_steps, tag2_lost_forward_steps
 
@@ -1692,20 +1692,20 @@ def turn_to_tag(
     )
     print("--------------------------------------------------")
 
-    # ★ 航向双打印：同时给出「传感器原始输出航向」与「零点纠正后航向」
+    # ★ 航向双打印：同时给出「传感器原始输出航向」与「零点纠正后航向」已注释
     #   原始输出航向   = 磁力计直接给出的绝对航向（0~359 度）
     #   零点纠正后航向 = 相对「启动朝向」的偏转角（-180~180 度，正 = 偏右）
-    rel_h = current_relative_heading()   # 顺带把原始航向记进 LAST_RAW_HEADING
-    raw_h = LAST_RAW_HEADING
-    if raw_h is None:
-        raw_h = read_mag_heading()
-    raw_txt = "不可用" if raw_h is None else f"{raw_h:.1f}"
-    rel_txt = "不可用" if rel_h is None else f"{rel_h:+.1f}"
-    zero_txt = "未设置" if HEADING_ZERO is None else f"{HEADING_ZERO:.1f}"
-    print(
-        f"[地磁航向] 原始输出航向={raw_txt}° | "
-        f"零点纠正后航向={rel_txt}° (启动零点={zero_txt}°)"
-    )
+    # rel_h = current_relative_heading()   # 顺带把原始航向记进 LAST_RAW_HEADING
+    # raw_h = LAST_RAW_HEADING
+    # if raw_h is None:
+    #     raw_h = read_mag_heading()
+    # raw_txt = "不可用" if raw_h is None else f"{raw_h:.1f}"
+    # rel_txt = "不可用" if rel_h is None else f"{rel_h:+.1f}"
+    # zero_txt = "未设置" if HEADING_ZERO is None else f"{HEADING_ZERO:.1f}"
+    # print(
+    #     f"[地磁航向] 原始输出航向={raw_txt}° | "
+    #     f"零点纠正后航向={rel_txt}° (启动零点={zero_txt}°)"
+    # )
 
     if step != 1:
         return False
@@ -1966,10 +1966,10 @@ def process_marker(current_marker, now=None):
         ID, marker_id, robot_tag_x, robot_tag_y, tag_yaw,
     )
 
-    print(
-        f"[Tag] 当前目标 ID={ID}，识别到 ID={marker_id}，"
-        f"X={robot_tag_x:.3f}m，Y={robot_tag_y:.3f}m，角度={tag_yaw:.1f}°"
-    )
+    # print(
+    #     f"[Tag] 当前目标 ID={ID}，识别到 ID={marker_id}，"
+    #     f"X={robot_tag_x:.3f}m，Y={robot_tag_y:.3f}m，角度={tag_yaw:.1f}°"
+    # )
 
     if ID == 3 and id4_presearch_active and marker_id != 4:
         id4_presearch_consecutive = 0
