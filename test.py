@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""重复执行一个动作。
+"""单动作重复测试工具。
 
-动作名改下面的 ACTION_NAME。
-运行后在终端输入重复次数。
+运行流程：
+  1. 输入要执行的动作名（如 front1_quick1 / bigright_10 / boxdown）
+  2. 输入重复次数
+  3. 执行完成后询问是否继续验证下一个动作，输入 y 继续、n 退出
 """
 
 import sys
@@ -13,16 +15,36 @@ import rospy
 sys.path.append("/home/lemon/catkin_ws/src/aelos_smart_ros")
 from leju import base_action
 
-# 改这里：要重复执行的动作名
-ACTION_NAME = "qian4"
 # 两次动作之间的间隔（秒）。动作服务发完即返回，间隔太短会叠在一起。
 ACTION_GAP_S = 0.5
 ACTION_SERVICE_WAIT_SECONDS = 30
 
 
-def ask_repeat_count():
+def ask_action_name(default=None):
+    """输入动作名；直接回车沿用上一次。返回 None 表示退出。"""
     while True:
-        text = input("请输入重复次数：").strip()
+        if default:
+            prompt = f"请输入动作名（回车沿用上一次 {default}，输入 q 退出）："
+        else:
+            prompt = "请输入动作名（输入 q 退出）："
+        text = input(prompt).strip()
+
+        if text.lower() == "q":
+            return None
+        if text == "":
+            if default:
+                return default
+            print("[输入无效] 动作名不能为空")
+            continue
+        return text
+
+
+def ask_repeat_count():
+    """输入重复次数；回车默认 1。"""
+    while True:
+        text = input("请输入重复次数（回车默认 1）：").strip()
+        if text == "":
+            return 1
         try:
             count = int(text)
         except ValueError:
@@ -34,11 +56,45 @@ def ask_repeat_count():
         return count
 
 
+def ask_again():
+    """是否继续验证下一个动作。"""
+    while True:
+        text = input("是否继续验证动作？（y = 继续，n = 退出）：").strip().lower()
+        if text in ("y", "yes"):
+            return True
+        if text in ("n", "no", ""):
+            return False
+        print("[输入无效] 请输入 y 或 n")
+
+
+def run_action(action_name, count):
+    """执行 action_name 共 count 次。返回 False 表示中途被中断。"""
+    print("=" * 50)
+    print(f"[开始] {action_name} × {count}")
+    print("=" * 50)
+
+    try:
+        for i in range(1, count + 1):
+            if rospy.is_shutdown():
+                print("[系统] ROS 已关闭，停止测试")
+                return False
+            print(f"[动作] 第 {i}/{count} 次: {action_name}")
+            base_action.action(action_name)
+            time.sleep(ACTION_GAP_S)
+    except rospy.ROSInterruptException:
+        print("[系统] ROS 已关闭，停止测试")
+        return False
+    except KeyboardInterrupt:
+        print("\n[系统] 收到手动停止指令，停止测试")
+        return False
+
+    print(f"[完成] 已执行 {count} 次 {action_name}")
+    return True
+
+
 def main():
     print("====== 单动作重复测试 ======")
-    print(f"[动作] 本次执行: {ACTION_NAME}")
-    print("[提示] 要换动作，先改代码里的 ACTION_NAME 再重新运行")
-    count = ask_repeat_count()
+    print("[提示] 动作名必须和机器人里已下载的动作完全一致，错一个字符机器人不会动")
 
     rospy.init_node("action_repeat_test")
     print(
@@ -61,23 +117,38 @@ def main():
         return
 
     print("[系统] 动作服务 action_receive 已就绪")
-    print(f"[开始] {ACTION_NAME} × {count}")
+
+    last_action = None
+
     try:
-        for i in range(1, count + 1):
+        while True:
             if rospy.is_shutdown():
                 print("[系统] ROS 已关闭，停止测试")
                 return
-            print(f"[动作] 第 {i}/{count} 次: {ACTION_NAME}")
-            base_action.action(ACTION_NAME)
-            time.sleep(ACTION_GAP_S)
-    except rospy.ROSInterruptException:
-        print("[系统] ROS 已关闭，停止测试")
-        return
-    except KeyboardInterrupt:
-        print("[系统] 收到手动停止指令，停止测试")
-        return
 
-    print(f"[完成] 已执行 {count} 次 {ACTION_NAME}")
+            # ① 输入动作名
+            action_name = ask_action_name(default=last_action)
+            if action_name is None:
+                print("[退出] 已取消测试")
+                return
+
+            # ② 输入重复次数
+            count = ask_repeat_count()
+
+            # ③ 执行
+            if not run_action(action_name, count):
+                return
+
+            last_action = action_name
+
+            # ④ 询问是否继续验证
+            if not ask_again():
+                print("[退出] 测试结束")
+                return
+
+    except KeyboardInterrupt:
+        print("\n[系统] 收到手动停止指令，停止测试")
+        return
 
 
 if __name__ == "__main__":
