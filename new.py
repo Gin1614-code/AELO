@@ -1564,7 +1564,7 @@ def _run_complete_actions(tag_id):
         return False
 
     if tag_id == 4:
-        print("[号码完成] ID=4 对正完成，左移大步×3后切到 ID=5")
+        print("[号码完成] ID=4 对正完成，左移大步×2后切到 ID=5")
         BoxLMove2(2)
         ID = 5
         return False
