@@ -437,6 +437,9 @@ ID5_MIN_TIGHT_ANGLE = 8.0
 # 超过这个值就先转向摆正，再执行盲搜动作。
 BLIND_SEARCH_ANGLE_TOL = 10.0
 
+#ID1盲搜上限
+ID1_BLIND_LIMIT = 4
+
 
 # ==================================================================
 # 【调试】一键开关；False 时 dbg 静默（不影响既有 print）
@@ -614,6 +617,8 @@ ROUTE_GROUP_PRESETS = {
 is_start_moved = False
 
 # 盲搜计数
+id1_blind_count = 0
+id2_blind_count = 0
 id3_blind_count = 0
 id4_blind_count = 0
 id5_blind_count = 0
@@ -1666,7 +1671,7 @@ def print_round_elapsed():
 def reset_round_state(sleep_func=time.sleep):
     global round, ID, step, level, round_started
     global selected_action_group, selected_route
-    global id3_blind_count, id4_blind_count, id5_blind_count
+    global id1_blind_count, id3_blind_count, id4_blind_count, id5_blind_count
     global round_start_time
 
     round += 1
@@ -1676,6 +1681,7 @@ def reset_round_state(sleep_func=time.sleep):
     round_started = False
     selected_action_group = None
     selected_route = None
+    id1_blind_count = 0
     id3_blind_count = 0
     id4_blind_count = 0
     id5_blind_count = 0
@@ -1999,7 +2005,7 @@ def mark_target_seen(
 
 def process_marker(current_marker, now=None):
     global marker, ID, level
-    global id3_blind_count, id4_blind_count, id5_blind_count
+    global id1_blind_count, id3_blind_count, id4_blind_count, id5_blind_count
     global tag4_action_pending
     global id2_full_align
     global id4_presearch_consecutive
@@ -2041,7 +2047,8 @@ def process_marker(current_marker, now=None):
         if ID != 1:
             search_for_id()
             return False
-
+        
+        id1_blind_count = 0
         level = "start_moving"
         theta_err = resolve_theta_error(1, tag_yaw)
         mark_target_seen(
@@ -2230,7 +2237,19 @@ def process_never_seen_missing():
     if blind_heading_guard():
         dbg('process_never_seen_missing', 'blind_heading_guard diverted')
         return False
-
+    
+    #ID=1 盲搜上限，超过直接切 ID=2
+    if ID == 1:
+        id1_blind_count += 1
+        print(f"[ID=1盲搜] 第{id1_blind_count}/{ID1_BLIND_LIMIT}次")
+        if id1_blind_count > ID1_BLIND_LIMIT:
+            print("[ID=1盲搜上限] 已到盲搜上限，直接切换到 ID=2")
+            id1_blind_count = 0
+            ID = 2
+        else:
+            search_for_id()
+        return False
+    
     if ID == 3:
         id3_blind_count += 1
         print(f"[ID=3盲搜] 第{id3_blind_count}次")
