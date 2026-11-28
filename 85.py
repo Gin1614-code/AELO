@@ -664,7 +664,7 @@ TAG2_GO2_EXTRA_M = 0.15    # 距离差超过此值 → 走大步
 TAG2_LOST_FORWARD_STEP_M = 0.025    # 丢码估算：每前进一步从最后距离扣 0.025m；对正界限仍是上面的 0.155m
 TAG4_X_OFFSET = 0.11
 TAG4_X_THRESHOLD = 0.05
-TAG4_FORWARD_ERROR = 0.16          # ★ 2026-10-16：改回 0.16（曾短暂试过 0.14，已还原）
+TAG4_FORWARD_ERROR = 0.1         
 TAG4_LOST_FORWARD_STEP_M = 0.025   # ID=4 丢码后估算：每完成前进一步，x_error 减少 0.025m
 TAG4_OBSERVATION_WAIT_SECONDS = 0.8
 ACTION_SERVICE_WAIT_SECONDS = 30
